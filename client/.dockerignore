@@ -1,2 +1,2 @@
-node_modules
+# This is a sample .gitignore file for a React project. And this will ignore the following files 
 package-lock.json
