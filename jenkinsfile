@@ -1,0 +1,51 @@
+pipeline {
+    agent any 
+
+    stages { 
+        stage('SCM Checkout') {
+            steps {
+                retry(3) {
+                    git branch: 'main', url: 'https://github.com/HGSChandeepa/Dockerize-MERN-App-with-CI-CD-Pipelines'
+                }
+            }
+        }
+        stage('Build API Docker Image') {
+            steps {  
+                dir('api') {
+                    bat 'docker build -t adomicarts/apiappv1:%BUILD_NUMBER% .'
+                }
+            }
+        }
+        stage('Build Client Docker Image') {
+            steps {
+                dir('client') {
+                    bat 'docker build -t adomicarts/clientappv1:%BUILD_NUMBER% .'
+                }
+            }
+        }
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([string(credentialsId: 'mern-test-pass', variable: 'mern-test')]) {
+                    script {
+                        bat "docker login -u adomicarts -p %mern-test%"
+                    }
+                }
+            }
+        }
+        stage('Push API Image') {
+            steps {
+                bat 'docker push adomicarts/apiappv1:%BUILD_NUMBER%'
+            }
+        }
+        stage('Push Client Image') {
+            steps {
+                bat 'docker push adomicarts/clientappv1:%BUILD_NUMBER%'
+            }
+        }
+    }
+    post {
+        always {
+            bat 'docker logout'
+        }
+    }
+}
